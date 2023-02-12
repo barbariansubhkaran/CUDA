@@ -3,14 +3,19 @@
 
 #include <stdio.h>
 
-__global__ void
 
-__global__ void unique_gid_calculation_2d(int * data)
+
+__global__ void unique_gid_calculation_2d_2d(int * data)
 {
-    int tid = threadIdx.x;
-    int block_offset =  blockIdx.x * blockDim.x;
+    int tid = blockDim.x * threadIdx.y + threadIdx.x;
 
-    int row_offset = blockDim.x * gridDim.x * blockIdx.y;
+     int num_threads_in_a_block = blockDim.x * blockDim.y;
+     int block_offset =  blockIdx.x * blockDim.x;
+
+
+
+    int num_threads_in_a_row = num_threads_in_a_block * gridDim.x;
+    int row_offset = num_threads_in_a_row * blockIdx.y;
 
     int gid = row_offset + block_offset + tid;
 
@@ -38,10 +43,10 @@ int main()
   cudaMemcpy(d_data, h_data, array_byte_size, cudaMemcpyHostToDevice);
 
 
-  dim3 block(4);
+  dim3 block(2,2);
   dim3 grid(2,2);
 
-  unique_gid_calculation_2d <<< grid, block>>> (d_data);
+  unique_gid_calculation_2d_2d <<< grid, block>>> (d_data);
   cudaDeviceSynchronize();
 
   cudaDeviceReset();
